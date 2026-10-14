@@ -51,12 +51,8 @@ Commit and push, and Vercel rebuilds automatically. Put images in `content/image
 
 ## Files
 
-- `src/index.html`: reading-room home page (cover/zoom video scenes, white YouTube playlist shelf with upload controls, bookshelf)
+- `src/index.html`: reading-room home page (video scenes, puppy, audio-only player with playlist upload, bookshelf)
+- `src/assets/dog.webp`: the puppy
 - `export.mjs`: Blogger -> `content/`
 - `build.mjs`: `content/` + `src/` -> `public/`
 - `vercel.json`: build settings, old-URL redirects, caching
-
-
-## Reading room layout
-
-The right-hand room video stays in cover mode and starts slightly zoomed in. Use the Zoom control to toggle the extra zoom without letterboxing. The YouTube playlist and playback controls remain on the white left-hand listening shelf. No dog animation, dog video, doghouse, ball, or dog shelf line is included.
