@@ -17,8 +17,6 @@ svg{display:block}
 :root{
   --amber:#f6b55c;--amber2:#e58a3a;--ink:#efe6dc;--mute:#a99fb0;
   --card:rgba(16,12,24,.62);--line:rgba(255,255,255,.09);
-  /* how high above the player bar the puppy shelf + dog house sit (raise it to lift everything) */
-  --pet-bottom:70px;
 }
 
 .app{position:relative;z-index:2;height:100vh;height:100dvh;display:flex;flex-direction:column;background:radial-gradient(120% 90% at 30% 0%,#1d1530 0,#0f0c16 60%)}
@@ -35,7 +33,7 @@ svg{display:block}
 .pill:hover{background:rgba(255,255,255,.1)}
 .pill[aria-pressed="true"]{background:rgba(246,181,92,.18);border-color:rgba(246,181,92,.55);color:#ffd9a3}
 
-/* layout: playlist shelf LEFT, full-height scene RIGHT, library floating above the scene */
+/* layout: white YouTube playlist shelf LEFT, full-height zoomed scene RIGHT, library floating above the scene */
 .stage{position:relative;flex:1;min-height:0;display:grid;gap:14px;padding:0 14px;
   grid-template-columns:minmax(250px,300px) minmax(0,1fr);
   transition:grid-template-columns .5s ease}
@@ -56,8 +54,8 @@ svg{display:block}
 .room{position:relative;min-height:0;border-radius:22px;overflow:hidden;border:1px solid var(--line);background:#0b0810}
 .bg{position:absolute;inset:0;z-index:0;overflow:hidden}
 #bgvids{position:absolute;inset:0}
-.bgv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%;opacity:0;transition:opacity 1.3s ease,filter 1.3s ease;background:#0b0810}
-.room[data-fit="fit"] .bgv{object-fit:contain}
+.bgv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%;transform:scale(1.08);transform-origin:center;opacity:0;transition:opacity 1.3s ease,filter 1.3s ease,transform .35s ease;background:#0b0810}
+.room[data-zoom="off"] .bgv{transform:scale(1)}
 .bgv.on{opacity:1}
 .scrim{position:absolute;inset:0;display:block;background:linear-gradient(180deg,rgba(8,5,14,.55) 0,rgba(8,5,14,0) 28%,rgba(8,5,14,0) 62%,rgba(8,5,14,.6) 100%)}
 .vig{position:absolute;inset:0;display:block;pointer-events:none;background:radial-gradient(125% 100% at 50% 52%,transparent 65%,rgba(4,2,8,.45) 100%)}
@@ -96,21 +94,10 @@ svg{display:block}
 @media (min-width:1540px){.cap{display:inline}}
 @media (max-width:1320px){.lead small{display:none}}
 
-/* ===== realistic running-dog footage (replaces the cartoon puppy) ===== */
-.pet{position:absolute;left:0;right:0;bottom:42px;height:180px;z-index:3;pointer-events:none}
-.dog-media{position:absolute;left:16px;bottom:0;width:min(290px,42%);min-width:180px;aspect-ratio:16/9;
-  overflow:hidden;border-radius:16px;background:rgba(10,8,16,.65);border:1px solid rgba(255,255,255,.24);
-  box-shadow:0 12px 34px rgba(0,0,0,.4);opacity:0;transform:translateY(12px) scale(.98);
-  transition:opacity .35s ease,transform .35s ease;pointer-events:none}
-.dog-media.on{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
-.dog-running{display:block;width:100%;height:100%;object-fit:cover;object-position:center 55%;background:#0c0a10}
-.dog-media::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.08),transparent 42%,rgba(0,0,0,.08))}
-@media(max-width:900px){.pet{bottom:62px}.dog-media{left:12px;width:min(260px,70%);min-width:160px}}
-
 /* ===== audio-only music strip (left) ===== */
 .music{align-self:start;padding:12px;gap:10px;color:#261d2e;
-  background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(248,245,251,.95));
-  border:1px solid rgba(255,255,255,.94);box-shadow:0 14px 38px rgba(0,0,0,.25)}
+  background:linear-gradient(180deg,#ffffff,#f8f5fb);
+  border:1px solid #ffffff;box-shadow:0 14px 38px rgba(0,0,0,.25)}
 .music .eyebrow{color:#986024}
 .music .link{color:#91551b}
 .music .track p{color:#756a7d}
@@ -227,7 +214,6 @@ input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;bac
   .top-actions .pill{padding:6px 10px;font-size:12px}
   .hero p{display:none}
   .hero{max-width:60%}
-  :root{--pet-bottom:64px}
 }
 @media (max-height:700px) and (min-width:901px){
   .hero p{display:none}
@@ -265,9 +251,6 @@ input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;bac
       </div>
       <div class="grp"><span class="cap">Weather</span>
         <button type="button" class="sb" id="sceneRainBtn" aria-pressed="true" title="Rain on/off" aria-label="Rain on or off"><span class="e">&#127783;&#65039;</span><span class="lbl">Rain</span></button>
-      </div>
-      <div class="grp"><span class="cap">Pup</span>
-        <button type="button" class="sb" id="dogBtn" aria-pressed="false" title="Show or hide real running-dog footage" aria-label="Show or hide real running-dog footage"><span class="e">&#9654;</span><span class="lbl">Real Dog</span></button>
       </div>
     </div>
 
@@ -329,7 +312,7 @@ input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;bac
     </aside>
 
     <!-- RIGHT WORKSPACE: full-cover scene video -->
-    <section class="room" id="room" data-fit="fill">
+    <section class="room" id="room" data-zoom="on">
       <div class="bg" id="bg" aria-hidden="true"><div id="bgvids"></div><i class="scrim"></i><i class="vig"></i></div>
 
       <div class="hero">
@@ -339,7 +322,7 @@ input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;bac
       </div>
 
       <div class="relax" id="relax">
-        <button type="button" class="rb" id="fitBtn" aria-label="Toggle full view or fill" title="Full view / Fill the frame"><span>View <b id="fitState">Fill</b></span></button>
+        <button type="button" class="rb" id="fitBtn" aria-label="Toggle video zoom" title="Zoom the video to fill the scene"><span>Zoom <b id="fitState">On</b></span></button>
         <button type="button" class="rb" id="rainBtn" aria-label="Toggle rain ambience" aria-pressed="false">
           <svg viewBox="0 0 24 24"><path d="M20 16.2A4.5 4.5 0 0 0 17.5 8h-1.8A7 7 0 1 0 4 14.9M8 19v2M8 13v2M16 19v2M16 13v2M12 21v2M12 15v2"/></svg>
           <span>Rain <b class="rain-state">Off</b></span>
@@ -350,16 +333,6 @@ input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;bac
         </button>
       </div>
 
-      <div class="pet" id="pet" aria-label="Real dog running video">
-        <div class="dog-media" id="dogMedia" aria-hidden="true">
-          <video class="dog-running" id="dogVideo" muted loop playsinline preload="none"
-            poster="https://images.pexels.com/videos/8746767/pexels-photo-8746767.jpeg?auto=compress&amp;dpr=1&amp;h=750&amp;w=1260"
-            aria-label="Real Labrador retriever running in a sunny backyard">
-            <source src="https://videos.pexels.com/video-files/8746767/8746767-hd_1920_1080_30fps.mp4" type="video/mp4">
-            <source src="https://videos.pexels.com/video-files/8746767/8746767-uhd_4096_2160_30fps.mp4" type="video/mp4">
-          </video>
-        </div>
-      </div>
 
       </section>
 
@@ -473,11 +446,12 @@ window.NEXORA_VIDEO_BASE = 'https://cdn.jsdelivr.net/gh/GV-Codes/nexora-videos@m
     }
   });
 
-  /* ---------- Full view / Fill toggle for the scene video ---------- */
+  /* ---------- Zoom toggle for the scene video (always keeps cover cropping) ---------- */
   $('fitBtn').onclick = function () {
-    var room = $('room'), fill = room.getAttribute('data-fit') !== 'fill';
-    room.setAttribute('data-fit', fill ? 'fill' : 'fit');
-    $('fitState').textContent = fill ? 'Fill' : 'Full';
+    var room = $('room'), zoomed = room.getAttribute('data-zoom') !== 'off';
+    room.setAttribute('data-zoom', zoomed ? 'off' : 'on');
+    $('fitState').textContent = zoomed ? 'Off' : 'On';
+    $('fitBtn').setAttribute('aria-pressed', zoomed ? 'false' : 'true');
   };
 
   /* ---------- Mobile tabs ---------- */
@@ -981,37 +955,6 @@ window.NEXORA_VIDEO_BASE = 'https://cdn.jsdelivr.net/gh/GV-Codes/nexora-videos@m
     }
     applyScene();
   };
-
-  /* ---------- Real dog footage toggle (no cartoon sprite or fake run cycle) ---------- */
-  var dogBtn = $('dogBtn'), dogMedia = $('dogMedia'), dogVideo = $('dogVideo');
-  var dogOn = false;
-
-  function setDogVideo(on) {
-    dogOn = !!on;
-    dogMedia.classList.toggle('on', dogOn);
-    dogMedia.setAttribute('aria-hidden', dogOn ? 'false' : 'true');
-    dogBtn.setAttribute('aria-pressed', dogOn ? 'true' : 'false');
-    dogBtn.title = dogOn ? 'Hide real running-dog footage' : 'Show real running-dog footage';
-    if (dogOn) {
-      var playAttempt = dogVideo.play();
-      if (playAttempt && playAttempt.catch) {
-        playAttempt.catch(function () {
-          // The poster remains visible if the browser blocks playback or the network is unavailable.
-        });
-      }
-    } else {
-      dogVideo.pause();
-    }
-  }
-
-  dogBtn.onclick = function () { setDogVideo(!dogOn); };
-  document.addEventListener('visibilitychange', function () {
-    if (document.hidden) { dogVideo.pause(); }
-    else if (dogOn) {
-      var playAttempt = dogVideo.play();
-      if (playAttempt && playAttempt.catch) { playAttempt.catch(function () {}); }
-    }
-  });
 
   applyScene();
   setTimeout(function () { ['spring', 'sunset', 'night', 'autumn', 'winter'].forEach(getVid); }, 4000);

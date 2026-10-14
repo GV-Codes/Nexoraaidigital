@@ -51,13 +51,12 @@ Commit and push, and Vercel rebuilds automatically. Put images in `content/image
 
 ## Files
 
-- `src/index.html`: reading-room home page (video scenes, puppy, audio-only player with playlist upload, bookshelf)
-- `src/assets/dog.webp`: the puppy
+- `src/index.html`: reading-room home page (cover/zoom video scenes, white YouTube playlist shelf with upload controls, bookshelf)
 - `export.mjs`: Blogger -> `content/`
 - `build.mjs`: `content/` + `src/` -> `public/`
 - `vercel.json`: build settings, old-URL redirects, caching
 
 
-## Real dog video
+## Reading room layout
 
-The home-page dog toggle uses real Labrador running footage from Pexels (Roman Odintsov), instead of the former illustrated puppy. Source clip: https://www.pexels.com/video/dog-running-on-the-grass-8746767/ . The video is loaded from Pexels' public video CDN, so it requires an internet connection at playback time.
+The right-hand room video stays in cover mode and starts slightly zoomed in. Use the Zoom control to toggle the extra zoom without letterboxing. The YouTube playlist and playback controls remain on the white left-hand listening shelf. No dog animation, dog video, doghouse, ball, or dog shelf line is included.
