@@ -2,6 +2,7 @@
 // Zero dependencies. Vercel runs this automatically (see vercel.json).
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 const ROOT = path.dirname(new URL(import.meta.url).pathname);
 const SRC = path.join(ROOT, 'src');
@@ -232,12 +233,24 @@ ${urls.map((u) => `  <url><loc>${SITE_URL}${u.loc}</loc>${u.lastmod ? `<lastmod>
 }
 
 async function main() {
-  const posts = (await readJsonDir(path.join(CONTENT, 'posts'))).sort((a, b) => (b.published || '').localeCompare(a.published || ''));
-  const pages = await readJsonDir(path.join(CONTENT, 'pages'));
+  const loadPosts = async () =>
+    (await readJsonDir(path.join(CONTENT, 'posts'))).sort((a, b) => (b.published || '').localeCompare(a.published || ''));
+  let posts = await loadPosts();
   if (!posts.length) {
-    console.error('No posts in ./content/posts. Run "node export.mjs" first.');
+    // Nothing committed yet: pull the posts straight from Blogger during this build.
+    console.log('No posts in ./content/posts - exporting them from Blogger first...');
+    try {
+      execFileSync(process.execPath, [path.join(ROOT, 'export.mjs')], { stdio: 'inherit' });
+    } catch {
+      /* export.mjs already printed the reason */
+    }
+    posts = await loadPosts();
+  }
+  if (!posts.length) {
+    console.error('No posts found. Run "node export.mjs" locally and commit the ./content folder.');
     process.exit(1);
   }
+  const pages = await readJsonDir(path.join(CONTENT, 'pages'));
 
   await fs.rm(PUB, { recursive: true, force: true });
   await fs.cp(SRC, PUB, { recursive: true });
