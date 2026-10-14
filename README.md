@@ -56,3 +56,8 @@ Commit and push, and Vercel rebuilds automatically. Put images in `content/image
 - `export.mjs`: Blogger -> `content/`
 - `build.mjs`: `content/` + `src/` -> `public/`
 - `vercel.json`: build settings, old-URL redirects, caching
+
+
+## Real dog video
+
+The home-page dog toggle uses real Labrador running footage from Pexels (Roman Odintsov), instead of the former illustrated puppy. Source clip: https://www.pexels.com/video/dog-running-on-the-grass-8746767/ . The video is loaded from Pexels' public video CDN, so it requires an internet connection at playback time.
