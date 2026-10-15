@@ -428,7 +428,7 @@ input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;bac
           <div class="bubble" id="dogBubble">Woof!</div>
           <i class="dshadow"></i>
           <div class="pop" id="dogPop"><div class="flip" id="dogFlip">
-            <img class="dogimg" id="dogImg" alt="Golden puppy with a blue paw-print bandana" width="72" height="101" draggable="false" src="/assets/dog.webp"/>
+            <img class="dogimg" id="dogImg" alt="Golden puppy with a blue paw-print bandana" width="72" height="101" draggable="false" src="https://cdn.jsdelivr.net/gh/GV-Codes/nexora-videos@main/dog.webp" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='/assets/dog.webp';}"/>
           </div></div>
         </div>
       </div>
@@ -616,6 +616,7 @@ window.NEXORA_VIDEO_BASE = 'https://cdn.jsdelivr.net/gh/GV-Codes/nexora-videos@m
   /* --- YouTube engine (hidden player, we only use its sound) --- */
   function ytCreate(src) {
     var pv = { controls: 0, rel: 0, playsinline: 1, fs: 0, disablekb: 1, iv_load_policy: 3 };
+    if (/^https?:/.test(location.protocol)) { pv.origin = location.origin; }
     if (src.kind === 'list') { pv.listType = 'playlist'; pv.list = src.id; }
     yt = new YT.Player('ytplayer', {
       width: '220', height: '220',
@@ -655,7 +656,9 @@ window.NEXORA_VIDEO_BASE = 'https://cdn.jsdelivr.net/gh/GV-Codes/nexora-videos@m
     window.onYouTubeIframeAPIReady = function () { var q = ytQueue; ytQueue = []; q.forEach(function (f) { f(); }); };
     var s = document.createElement('script');
     s.src = 'https://www.youtube.com/iframe_api';
+    s.onerror = function () { $('trackTitle').textContent = 'Could not reach YouTube'; $('trackSub').textContent = 'Check your connection or upload MP3 files'; };
     document.head.appendChild(s);
+    setTimeout(function () { if (!ytReady && mode === 'yt' && $('trackTitle').textContent === 'Loading\u2026') { $('trackTitle').textContent = 'Rainy-day playlist'; $('trackSub').textContent = 'Audio only \u00b7 Press play'; } }, 9000);
   }
 
   /* --- MP3 engine --- */
@@ -691,10 +694,10 @@ window.NEXORA_VIDEO_BASE = 'https://cdn.jsdelivr.net/gh/GV-Codes/nexora-videos@m
         $('trackSub').textContent = 'Audio only \u00b7 Track ' + (qi + 1) + ' of ' + queue.length + (plainFiles ? ' \u00b7 your files' : ' \u00b7 your MP3 links');
       } else if (mode === 'yt' && ytReady) {
         var vd = yt.getVideoData ? yt.getVideoData() : null;
-        if (vd && vd.title) { $('trackTitle').textContent = vd.title; }
+        $('trackTitle').textContent = (vd && vd.title) ? vd.title : 'Rainy-day playlist';
         var list = yt.getPlaylist ? yt.getPlaylist() : null;
         var idx = yt.getPlaylistIndex ? yt.getPlaylistIndex() : -1;
-        var sub = 'Audio only';
+        var sub = (vd && vd.title) ? 'Audio only' : 'Audio only \u00b7 Press play';
         if (list && list.length && idx >= 0) { sub += ' \u00b7 Track ' + (idx + 1) + ' of ' + list.length; }
         if (vd && vd.author) { sub += ' \u00b7 ' + vd.author; }
         $('trackSub').textContent = sub;
@@ -1210,7 +1213,7 @@ window.NEXORA_VIDEO_BASE = 'https://cdn.jsdelivr.net/gh/GV-Codes/nexora-videos@m
     var bx = ox + w * SHELF.x0, by = oy + h * SHELF.y0, bw = w * (SHELF.x1 - SHELF.x0), bh = h * (SHELF.y1 - SHELF.y0);
     mus.style.transform = 'none';
     var pw = mus.offsetWidth, ph = mus.offsetHeight;
-    var scale = Math.min(bw / pw, bh / ph, 1.15);
+    var scale = Math.min((bw * 0.94) / pw, (bh * 0.94) / ph, 1);
     var left = (r.left - st.left) + bx + (bw - pw * scale) / 2;
     var top = (r.top - st.top) + by + (bh - ph * scale) / 2;
     mus.style.left = Math.round(left) + 'px';
