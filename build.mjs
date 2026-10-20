@@ -354,6 +354,9 @@ async function main() {
       posts.map((p) => ({ title: p.title, url: `/posts/${p.slug}/`, labels: p.labels || [], image: p.image || '', summary: p.summary || '', published: p.published })),
     ),
   );
+  for (const p of posts) {
+    await write(`book/${p.slug}.json`, JSON.stringify({ title: p.title, published: p.published, labels: p.labels || [], html: p.html }));
+  }
   for (let i = 0; i < posts.length; i++) {
     await write(`posts/${posts[i].slug}/index.html`, postPage(posts[i], posts[i - 1], posts[i + 1]));
   }
