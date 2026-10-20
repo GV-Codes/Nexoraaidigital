@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta content='width=device-width,initial-scale=1,viewport-fit=cover' name='viewport'/>
+<meta name="referrer" content="strict-origin-when-cross-origin"/>
 <title>Nexora AI Digital</title>
 <meta name="description" content="Explore AI. Decode Technology. Create What's Next. Tutorials on AI, project management, Six Sigma, data analytics and digital marketing."/>
 <link rel="alternate" type="application/rss+xml" title="Nexora AI Digital" href="/feed.xml"/>
@@ -158,8 +159,10 @@ input[type=range]{-webkit-appearance:none;appearance:none;flex:1;min-width:0;hei
   background:linear-gradient(90deg,var(--amber) var(--p,0%),rgba(255,255,255,.16) var(--p,0%))}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#fff3de;border:2px solid var(--amber2)}
 input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;background:#fff3de;border:2px solid var(--amber2)}
-.ytbox.show{opacity:1;pointer-events:auto;z-index:60;left:14px;bottom:44px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.25)}
+.ytbox.show{overflow:visible;opacity:1;pointer-events:auto;z-index:60;left:14px;bottom:44px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.25)}
 .ytbox iframe{width:100%;height:100%;border:0;display:block}
+.ytdbg{display:none;position:absolute;left:0;top:100%;margin-top:6px;width:260px;font:11px/1.35 ui-monospace,Menlo,Consolas,monospace;color:#fff;background:rgba(0,0,0,.75);padding:6px 8px;border-radius:8px;pointer-events:none}
+.ytbox.show .ytdbg{display:block}
 .ytshow{font-size:10px;color:#91551b;text-decoration:underline;text-align:center;padding:0;margin-top:-2px;background:none}
 .ytbox{position:fixed;left:0;bottom:0;width:220px;height:220px;opacity:.01;pointer-events:none;z-index:-1;overflow:hidden}
 
@@ -480,7 +483,7 @@ input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;bac
 </div>
 
 <!-- hidden audio engines -->
-<div class="ytbox" aria-hidden="true"><div id="ytplayer"></div></div>
+<div class="ytbox" aria-hidden="true"><div id="ytplayer"></div><div class="ytdbg" id="ytDbg">YouTube: starting…</div></div>
 
 <!-- upload / change playlist -->
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Upload your playlist">
@@ -588,7 +591,8 @@ window.NEXORA_VIDEO_BASE = 'https://cdn.jsdelivr.net/gh/GV-Codes/nexora-videos@m
 
   /* ---------- Audio-only music player: YouTube (hidden) or MP3 files/links ---------- */
   var mode = null;                      // 'yt' | 'mp3'
-  var yt = null, ytReady = false, ytQueue = [], ytApiLoading = false, pendingPlay = false, ytErrs = 0, startWd = null;
+  var yt = null, ytReady = false, ytQueue = [], ytApiLoading = false, pendingPlay = false, ytErrs = 0, startWd = null, ytTried = false, lastYtSrc = null;
+  function dbg(t) { var d = $('ytDbg'); if (d) { d.textContent = 'YouTube: ' + t; } }
   var au = document.createElement('audio'); au.preload = 'auto';
   var queue = [], qi = 0, shuffleOn = false, loopOn = false, muted = false, seeking = false, plainFiles = false;
   var STORE = 'nexoraPlaylistV2';
@@ -628,17 +632,20 @@ window.NEXORA_VIDEO_BASE = 'https://cdn.jsdelivr.net/gh/GV-Codes/nexora-videos@m
   }
 
   /* --- YouTube engine (hidden player, we only use its sound) --- */
-  function ytCreate(src) {
+  function ytCreate(src, nocookie) {
+    lastYtSrc = src;
+    if (!$('ytplayer')) { var d0 = document.createElement('div'); d0.id = 'ytplayer'; document.querySelector('.ytbox').insertBefore(d0, document.querySelector('.ytbox').firstChild); }
     var pv = { controls: 0, rel: 0, playsinline: 1, fs: 0, disablekb: 1, iv_load_policy: 3 };
     if (/^https?:/.test(location.protocol)) { pv.origin = location.origin; }
     if (src.kind === 'list') { pv.listType = 'playlist'; pv.list = src.id; }
     yt = new YT.Player('ytplayer', {
       width: '220', height: '220',
+      host: nocookie ? 'https://www.youtube-nocookie.com' : 'https://www.youtube.com',
       videoId: src.kind === 'video' ? src.id : undefined,
       playerVars: pv,
       events: {
         onReady: function () {
-          ytReady = true;
+          ytReady = true; dbg('ready' + (nocookie ? ' (nocookie host)' : '') + ' \u00b7 origin ' + location.origin);
           yt.setVolume(curVol());
           if (pendingPlay) { pendingPlay = false; try { yt.playVideo(); } catch (e3) {} }
           if (shuffleOn && yt.setShuffle) { yt.setShuffle(true); }
@@ -648,6 +655,7 @@ window.NEXORA_VIDEO_BASE = 'https://cdn.jsdelivr.net/gh/GV-Codes/nexora-videos@m
         onStateChange: function (e) {
           if (mode !== 'yt') { return; }
           setPlayIcon(e.data === 1);
+          dbg('state ' + e.data + ' (1=playing 3=buffering 5=cued -1=unstarted)');
           if (e.data === 1) { ytErrs = 0; clearTimeout(startWd); }
           if (e.data === 3) { $('trackSub').textContent = 'Buffering\u2026'; }
           if (e.data === 2) { $('trackSub').textContent = 'Paused'; }
@@ -658,7 +666,7 @@ window.NEXORA_VIDEO_BASE = 'https://cdn.jsdelivr.net/gh/GV-Codes/nexora-videos@m
           $('trackSub').textContent = 'Your browser blocked autoplay \u00b7 press play again';
         },
         onError: function (e) {
-          var c = e && e.data;
+          var c = e && e.data; dbg('ERROR ' + c + ' (101/150 embedding off, 153 no referrer, 100 removed/private)');
           /* 101/150 = the owner blocked embedding; 100 = removed/private. For playlists, skip to the next video. */
           if (src.kind === 'list' && ytErrs < 8) {
             ytErrs++;
@@ -667,7 +675,7 @@ window.NEXORA_VIDEO_BASE = 'https://cdn.jsdelivr.net/gh/GV-Codes/nexora-videos@m
             setTimeout(function () { try { yt.nextVideo(); } catch (x) {} }, 700);
             return;
           }
-          $('trackTitle').textContent = (c === 101 || c === 150)
+          $('trackTitle').textContent = (c === 153) ? 'YouTube needs this page\u2019s address to play (error 153)' : (c === 101 || c === 150)
             ? 'The owner blocks this video from playing on other sites'
             : 'This link could not play here (error ' + c + ')';
           $('trackSub').textContent = 'Use \u201cPlaylist \u2197\u201d to open it on YouTube, or upload your own links/MP3s';
@@ -804,7 +812,15 @@ window.NEXORA_VIDEO_BASE = 'https://cdn.jsdelivr.net/gh/GV-Codes/nexora-videos@m
         clearTimeout(startWd);
         startWd = setTimeout(function () {
           var st = -2; try { st = yt.getPlayerState(); } catch (x) {}
-          if (st !== 1 && st !== 3) { $('trackSub').textContent = 'YouTube did not start (state ' + st + ') \u00b7 press play again or open \u201cPlaylist\u201d'; }
+          if (st !== 1 && st !== 3) {
+            if (!ytTried && lastYtSrc) {
+              ytTried = true; dbg('no start \u2014 retrying on youtube-nocookie.com');
+              try { yt.destroy(); } catch (x) {}
+              ytReady = false; yt = null; pendingPlay = true;
+              $('trackSub').textContent = 'Retrying\u2026';
+              ytCreate(lastYtSrc, true);
+            } else { $('trackSub').textContent = 'YouTube did not start (state ' + st + ') \u00b7 press play again or open \u201cPlaylist\u201d'; }
+          }
         }, 4000);
       }
     }
@@ -889,6 +905,19 @@ window.NEXORA_VIDEO_BASE = 'https://cdn.jsdelivr.net/gh/GV-Codes/nexora-videos@m
   var CATS = ['Other'];
   var books = [], state = { q: '', cat: 'All books' }, selected = null;
 
+  var labelCanon = {};
+  function cleanLabels(v) {
+    var out = [];
+    (Array.isArray(v) ? v : [v]).forEach(function (x) {
+      String(x == null ? '' : x).replace(/^\s*\[|\]\s*$/g, '').split(',').forEach(function (t) {
+        t = t.replace(/^[\s"'\u201c\u201d\u2018\u2019]+|[\s"'\u201c\u201d\u2018\u2019]+$/g, '');
+        if (!t) { return; }
+        var k = t.toLowerCase(); if (!labelCanon[k]) { labelCanon[k] = t; }
+        if (out.indexOf(labelCanon[k]) < 0) { out.push(labelCanon[k]); }
+      });
+    });
+    return out;
+  }
   function categorize(b) { return (b.labels && b.labels[0]) || 'Other'; }
   function hash(s) { var h = 0; for (var i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) | 0; } return Math.abs(h); }
   function decorate(b, i) {
@@ -914,7 +943,7 @@ window.NEXORA_VIDEO_BASE = 'https://cdn.jsdelivr.net/gh/GV-Codes/nexora-videos@m
     fetch('/posts.json')
       .then(function (r) { if (!r.ok) { throw new Error('http ' + r.status); } return r.json(); })
       .then(function (list) {
-        books = list.map(function (p) { return { title: p.title, link: p.url, labels: p.labels || [], img: p.image || '', text: p.summary || '' }; }).map(decorate);
+        books = list.map(function (p) { return { title: p.title, link: p.url, labels: cleanLabels(p.labels), img: p.image || '', text: p.summary || '' }; }).map(decorate);
         var counts = {};
         books.forEach(function (b) { counts[b.cat] = (counts[b.cat] || 0) + 1; });
         CATS = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; });

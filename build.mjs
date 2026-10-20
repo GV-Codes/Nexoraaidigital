@@ -4,6 +4,23 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 
+// Labels can arrive as "A, B", '["A", "B"]' or an array: normalise to a clean, de-duplicated list.
+const labelCanon = new Map();
+function cleanLabels(v) {
+  const out = [];
+  (Array.isArray(v) ? v : [v]).forEach((x) => {
+    String(x == null ? '' : x).replace(/^\s*\[|\]\s*$/g, '').split(',').forEach((t) => {
+      t = t.replace(/^[\s"'\u201c\u201d\u2018\u2019]+|[\s"'\u201c\u201d\u2018\u2019]+$/g, '');
+      if (!t) return;
+      const k = t.toLowerCase();
+      if (!labelCanon.has(k)) labelCanon.set(k, t);
+      const c = labelCanon.get(k);
+      if (!out.includes(c)) out.push(c);
+    });
+  });
+  return out;
+}
+
 const ROOT = path.dirname(new URL(import.meta.url).pathname);
 const SRC = path.join(ROOT, 'src');
 const CONTENT = path.join(ROOT, 'content');
@@ -98,7 +115,7 @@ function fromMarkdownFile(name, raw) {
     oldPath: '',
     published: date,
     updated: date,
-    labels: (meta.labels || '').split(',').map((s) => s.trim()).filter(Boolean),
+    labels: cleanLabels(meta.labels),
     image: meta.image || '',
     summary: meta.summary || plainText(html),
     html,
