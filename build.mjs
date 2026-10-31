@@ -4,6 +4,23 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 
+// Labels can arrive as "A, B", '["A", "B"]' or an array: normalise to a clean, de-duplicated list.
+const labelCanon = new Map();
+function cleanLabels(v) {
+  const out = [];
+  (Array.isArray(v) ? v : [v]).forEach((x) => {
+    String(x == null ? '' : x).replace(/^\s*\[|\]\s*$/g, '').split(',').forEach((t) => {
+      t = t.replace(/^[\s"'\u201c\u201d\u2018\u2019]+|[\s"'\u201c\u201d\u2018\u2019]+$/g, '');
+      if (!t) return;
+      const k = t.toLowerCase();
+      if (!labelCanon.has(k)) labelCanon.set(k, t);
+      const c = labelCanon.get(k);
+      if (!out.includes(c)) out.push(c);
+    });
+  });
+  return out;
+}
+
 const ROOT = path.dirname(new URL(import.meta.url).pathname);
 const SRC = path.join(ROOT, 'src');
 const CONTENT = path.join(ROOT, 'content');
@@ -98,7 +115,7 @@ function fromMarkdownFile(name, raw) {
     oldPath: '',
     published: date,
     updated: date,
-    labels: (meta.labels || '').split(',').map((s) => s.trim()).filter(Boolean),
+    labels: cleanLabels(meta.labels),
     image: meta.image || '',
     summary: meta.summary || plainText(html),
     html,
@@ -354,8 +371,34 @@ async function main() {
       posts.map((p) => ({ title: p.title, url: `/posts/${p.slug}/`, labels: p.labels || [], image: p.image || '', summary: p.summary || '', published: p.published })),
     ),
   );
+  // One standalone "book" reader page per article (opens in its own tab, so the home page keeps playing music).
+  const bookCss = await fs.readFile(path.join(SRC, 'book.css'), 'utf8');
+  const bookJs = await fs.readFile(path.join(SRC, 'book.js'), 'utf8');
   for (const p of posts) {
-    await write(`book/${p.slug}.json`, JSON.stringify({ title: p.title, published: p.published, labels: p.labels || [], html: p.html }));
+    const data = JSON.stringify({ title: p.title, published: p.published, labels: p.labels || [], html: p.html })
+      .replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+    const link = `/posts/${p.slug}/`;
+    const page = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="robots" content="noindex"/>
+<link rel="canonical" href="${SITE_URL ? SITE_URL + link : link}"/>
+<title>${esc(p.title)} \u00b7 Nexora AI Digital</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<style>html,body{margin:0;height:100%;background:#0f0c16;color:#f3e9da;font-family:Inter,system-ui,sans-serif}
+${bookCss}</style></head>
+<body>
+<noscript><p style="padding:24px"><a style="color:#f6dca6" href="${link}">Read \u201c${esc(p.title)}\u201d</a></p></noscript>
+<script>${bookJs}</script>
+<script>
+(function () {
+  var D = ${data}, L = ${JSON.stringify(link)};
+  var b = { title: D.title, link: L, hue: NexoraBook.hash(D.title) % 360, cat: (D.labels && D.labels[0]) || '' };
+  NexoraBook.open(b, { standalone: true, data: D });
+})();
+</script>
+</body></html>`;
+    await write(`read/${p.slug}/index.html`, page);
   }
   for (let i = 0; i < posts.length; i++) {
     await write(`posts/${posts[i].slug}/index.html`, postPage(posts[i], posts[i - 1], posts[i + 1]));
