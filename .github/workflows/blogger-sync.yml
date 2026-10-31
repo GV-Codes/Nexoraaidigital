@@ -1,0 +1,46 @@
+name: Sync Markdown posts to Blogger
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "content/posts/**/*.md"
+  workflow_dispatch:
+    inputs:
+      publish_new_posts:
+        description: "Publish newly created Blogger posts (leave unchecked to create drafts)"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: blogger-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install sync dependencies
+        run: npm install --no-save yaml marked
+
+      - name: Sync Markdown posts to Blogger
+        env:
+          BLOGGER_BLOG_ID: ${{ secrets.BLOGGER_BLOG_ID }}
+          BLOGGER_CLIENT_ID: ${{ secrets.BLOGGER_CLIENT_ID }}
+          BLOGGER_CLIENT_SECRET: ${{ secrets.BLOGGER_CLIENT_SECRET }}
+          BLOGGER_REFRESH_TOKEN: ${{ secrets.BLOGGER_REFRESH_TOKEN }}
+          PUBLISH_NEW_POSTS: ${{ github.event_name == 'push' && 'true' || inputs.publish_new_posts }}
+        run: node scripts/sync-blogger.mjs
