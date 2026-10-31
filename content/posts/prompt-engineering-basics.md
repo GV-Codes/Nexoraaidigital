@@ -1,5 +1,5 @@
 ---
-title: Prompt Engineering Basics: Write Prompts That Get Better Answers
+title: "Prompt Engineering Basics: Write Prompts That Get Better Answers"
 date: 2026-10-13
 labels: Artificial Intelligence, Prompt Engineering
 summary: A simple five-part formula for writing AI prompts that return clear, useful, usable answers.

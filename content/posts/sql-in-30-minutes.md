@@ -1,5 +1,5 @@
 ---
-title: SQL in 30 Minutes: The Five Queries You Actually Need
+title: "SQL in 30 Minutes: The Five Queries You Actually Need"
 date: 2026-10-11
 labels: Data Analytics, SQL
 summary: Learn SELECT, WHERE, GROUP BY, JOIN and ORDER BY with one small example you can run today.

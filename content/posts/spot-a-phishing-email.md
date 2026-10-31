@@ -1,5 +1,5 @@
 ---
-title: Phishing 101: How to Spot a Scam Email in 30 Seconds
+title: "Phishing 101: How to Spot a Scam Email in 30 Seconds"
 date: 2026-10-12
 labels: Cybersecurity, Phishing
 summary: Six quick checks that catch most phishing emails before you click, plus what to do if you already did.

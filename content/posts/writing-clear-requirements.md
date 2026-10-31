@@ -1,5 +1,5 @@
 ---
-title: Business Analysis Starter Kit: Writing Clear Requirements
+title: "Business Analysis Starter Kit: Writing Clear Requirements"
 date: 2026-10-10
 labels: Business Analysis, Requirements
 summary: How to turn vague requests into clear, testable requirements using user stories and acceptance criteria.

@@ -1,5 +1,5 @@
 ---
-title: Welcome to Nexora AI Digital
+title: "Welcome to Nexora AI Digital"
 date: 2026-10-14
 labels: Artificial Intelligence, Welcome
 summary: What Nexora AI Digital is about, what you will find here, and how to read it.
