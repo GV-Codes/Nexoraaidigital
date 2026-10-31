@@ -8,10 +8,5 @@
     "export": "node export.mjs",
     "build": "node build.mjs"
   },
-  "engines": {
-    "node": ">=18"
-  },
-  "dependencies": {
-    "marked": "^15.0.7"
-  }
+  "engines": { "node": ">=18" }
 }
